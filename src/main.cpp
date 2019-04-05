@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cmath>
 
+#include <SDL2/SDL.h>
+
 struct Vec3 {
   double x, y, z;
 
@@ -64,6 +66,16 @@ struct Sphere {
     }
 };
 
+struct Plane {
+    Vec3 v1, v2;
+
+    Plane(const Vec3 &v1, const Vec3 &v2) : v1(v1), v2(v2) {}
+
+    bool intersect(const Ray &ray, double &t) {
+
+    }
+};
+
 void tmp(Vec3 &c) {
     c.x = (c.x > 255) ? 255 : (c.x < 0) ? 0 : c.x;
     c.y = (c.y > 255) ? 255 : (c.y < 0) ? 0 : c.y;
@@ -87,25 +99,82 @@ int main(int argc, char *argv[]) {
     double t;
     Vec3 pixel(black);
 
-    for (int y = 0; y < H; y++) {
-        for (int x = 0; x < W; x++) {
-            pixel = black;
+    // SDL Init Stuff
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window *window = SDL_CreateWindow("RayTracing", SDL_WINDOWPOS_CENTERED,
+                         SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,
+                             SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    // End SDL Stuff
 
-            Ray ray(Vec3(x, y, 0), Vec3(0, 0, 1));
-            if (sphere.intersect(ray, t)) {
-                pixel = red;
-                const Vec3 pi = ray.o + ray.d*t;
-                const Vec3 L = light.c - pi;
-                const Vec3 N = sphere.getNormal(pi);
-                const double dt = L.normalize().dot(N.normalize());
 
-                pixel = (red + white*dt) * 0.5;
-                tmp(pixel);
+    bool quit = false;
+    while (!quit) {
+        SDL_RenderPresent(renderer);
+
+        for (int y = 0; y < H; y++) {
+            for (int x = 0; x < W; x++) {
+                pixel = black;
+
+                Ray ray(Vec3(x, y, 100), Vec3(0, 0, -1));
+                if (sphere.intersect(ray, t)) {
+                    pixel = red;
+                    const Vec3 pi = ray.o + ray.d*t;
+                    const Vec3 L = light.c - pi;
+                    const Vec3 N = sphere.getNormal(pi);
+                    const double dt = L.normalize().dot(N.normalize());
+
+                    pixel = (red + white*dt) * 0.5;
+                    tmp(pixel);
+                }
+
+                SDL_SetRenderDrawColor(renderer, (uint8_t)pixel.x, (uint8_t)pixel.y, (uint8_t)pixel.z, 255);
+                SDL_RenderDrawPoint(renderer, x, y);
+                
+                /*
+                out << (int)pixel.x << " "
+                    << (int)pixel.y << " "
+                    << (int)pixel.z << "\n";
+                */
             }
-            
-            out << (int)pixel.x << " "
-                << (int)pixel.y << " "
-                << (int)pixel.z << "\n";
+        }
+
+
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT)
+                quit = true;
+
+            if (event.type == SDL_KEYDOWN) {
+                switch(event.key.keysym.sym) {
+                    case SDLK_q:
+                        quit = true;
+                        break;
+                    case SDLK_w:
+                        light.c.y -= 25;
+                        break;
+                    case SDLK_a:
+                        light.c.x -= 25;
+                        break;
+                    case SDLK_s:
+                        light.c.y += 25;
+                        break;
+                    case SDLK_d:
+                        light.c.x += 25;
+                        break;
+                    case SDLK_e:
+                        light.c.z += 25;
+                        break;
+                    case SDLK_r:
+                        light.c.z -= 25;
+                        break;
+                    case SDLK_l:
+                        std::cout << "x: " << light.c.x << ", y: " << light.c.y << ", z: " << light.c.z << std::endl;
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
     }
 }
