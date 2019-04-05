@@ -1,0 +1,8 @@
+BasedOnStyle: Google
+
+IndentWidth: 4
+TabWidth: 4
+ColumnLimit: 90
+
+AllowShortIfStatementsOnASingleLine: false
+AllowAllParametersOfDeclarationOnNextLine: true
