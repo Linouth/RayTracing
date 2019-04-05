@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include <SDL2/SDL.h>
 
@@ -62,6 +63,11 @@ int main(void) {
     Sphere sphere({0, 0, 100}, 30);
     Sphere light({0, 0, 50}, 1);
 
+    std::vector<Sphere> objects = {
+        Sphere({0, 0, 100 }, 30),
+        Sphere({20, 5, 50}, 10)
+    };
+
     double ti;
     Vec3 pixel(black);
 
@@ -111,25 +117,27 @@ int main(void) {
                 // Define ray from pixel vector
                 Ray ray(E, p_ij.normalize());
 
-                /* Ray ray(Vec3(x, y, 100), Vec3(0, 0, -1)); */
-                if (sphere.intersect(ray, ti)) {
-                    pixel = red;
-                    const Vec3 pi = ray.o + ray.d*ti;
-                    const Vec3 L = light.c - pi;
-                    const Vec3 N = sphere.getNormal(pi);
-                    const double dt = L.normalize().dot(N.normalize());
+                for (auto &sphere: objects) {
+                    if (sphere.intersect(ray, ti)) {
+                        pixel = red;
+                        const Vec3 pi = ray.o + ray.d*ti;
+                        const Vec3 L = light.c - pi;
+                        const Vec3 N = sphere.getNormal(pi);
+                        const double dt = L.normalize().dot(N.normalize());
 
-                    pixel = (red + white*dt) * 0.5;
-                    tmp(pixel);
+                        pixel = (red + white*dt) * 0.5;
+                        tmp(pixel);
+                    }
+
+                    SDL_SetRenderDrawColor(renderer, (uint8_t)pixel.x, (uint8_t)pixel.y, (uint8_t)pixel.z, 255);
+                    SDL_RenderDrawPoint(renderer, i, j);
                 }
-
-                SDL_SetRenderDrawColor(renderer, (uint8_t)pixel.x, (uint8_t)pixel.y, (uint8_t)pixel.z, 255);
-                SDL_RenderDrawPoint(renderer, i, j);
             }
         }
 
         SDL_RenderPresent(renderer);
 
+        const int STEPSIZE = 10;
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT)
@@ -137,26 +145,26 @@ int main(void) {
 
             if (event.type == SDL_KEYDOWN) {
                 switch(event.key.keysym.sym) {
-                    case SDLK_q:
+                    case SDLK_ESCAPE:
                         quit = true;
                         break;
                     case SDLK_w:
-                        light.c.y -= 25;
+                        light.c.y -= STEPSIZE;
                         break;
                     case SDLK_a:
-                        light.c.x -= 25;
+                        light.c.x -= STEPSIZE;
                         break;
                     case SDLK_s:
-                        light.c.y += 25;
+                        light.c.y += STEPSIZE;
                         break;
                     case SDLK_d:
-                        light.c.x += 25;
+                        light.c.x += STEPSIZE;
+                        break;
+                    case SDLK_q:
+                        light.c.z += STEPSIZE;
                         break;
                     case SDLK_e:
-                        light.c.z += 25;
-                        break;
-                    case SDLK_r:
-                        light.c.z -= 25;
+                        light.c.z -= STEPSIZE;
                         break;
                     case SDLK_l:
                         std::cout << "x: " << light.c.x << ", y: " << light.c.y << ", z: " << light.c.z << std::endl;
