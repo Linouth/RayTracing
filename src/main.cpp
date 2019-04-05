@@ -1,29 +1,8 @@
-#include <fstream>
 #include <iostream>
-#include <cmath>
 
 #include <SDL2/SDL.h>
 
-struct Vec3 {
-  double x, y, z;
-
-  Vec3(double x, double y, double z) : x(x), y(y), z(z) {}
-  Vec3() {}
-
-  Vec3 operator+(const Vec3 &v) const { return Vec3(x + v.x, y + v.y, z + v.z); }
-  Vec3 operator-(const Vec3 &v) const { return Vec3(x - v.x, y - v.y, z - v.z); }
-  Vec3 operator*(const double d) const { return Vec3(x * d, y * d, z * d); }
-  Vec3 operator/(const double d) const { return Vec3(x / d, y / d, z / d); }
-
-  double dot(const Vec3 &v) const { return x * v.x + y * v.y + z * v.z; }
-
-  double magnitude() const { return std::sqrt(x * x + y * y + z * z); }
-
-  Vec3 normalize() const {
-    double mg = magnitude();
-    return Vec3(x / mg, y / mg, z / mg);
-  }
-};
+#include "Vec3.hpp"
 
 struct Ray {
     Vec3 o;  // origin (?)
@@ -66,23 +45,13 @@ struct Sphere {
     }
 };
 
-struct Plane {
-    Vec3 v1, v2;
-
-    Plane(const Vec3 &v1, const Vec3 &v2) : v1(v1), v2(v2) {}
-
-    bool intersect(const Ray &ray, double &t) {
-
-    }
-};
-
 void tmp(Vec3 &c) {
     c.x = (c.x > 255) ? 255 : (c.x < 0) ? 0 : c.x;
     c.y = (c.y > 255) ? 255 : (c.y < 0) ? 0 : c.y;
     c.z = (c.z > 255) ? 255 : (c.z < 0) ? 0 : c.z;
 }
 
-int main(int argc, char *argv[]) {
+int main(void) {
     int W = 500;
     int H = 500;
 
@@ -90,13 +59,10 @@ int main(int argc, char *argv[]) {
     const Vec3 red(255, 0, 0);
     const Vec3 black(0, 0, 0);
 
-    Sphere sphere({W*0.5, H*0.5, 50}, 50);
+    Sphere sphere({0, 0, 100}, 30);
     Sphere light({0, 0, 50}, 1);
 
-    std::ofstream out("out.ppm");
-    out << "P3\n" << W << " " << H << " 255\n";
-
-    double t;
+    double ti;
     Vec3 pixel(black);
 
     // SDL Init Stuff
@@ -107,19 +73,41 @@ int main(int argc, char *argv[]) {
                              SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     // End SDL Stuff
 
+    const double d = 1.0;
+    const double theta = (3.141593/2);
+    const Vec3 w = {0, 1, 0};
+
+    Vec3 E = { 0, 0, 0 };
+    /* Vec3 T = sphere.c; */
+    Vec3 T = { 0, 0, 1};
 
     bool quit = false;
     while (!quit) {
-        SDL_RenderPresent(renderer);
 
-        for (int y = 0; y < H; y++) {
-            for (int x = 0; x < W; x++) {
+        const double g_x = d * std::tan(theta/2);
+        const double g_y = g_x * H/W;
+
+        const Vec3 t = T - E;
+        const Vec3 t_n = t.normalize();
+        const Vec3 b_n = w.cross(t_n);
+        const Vec3 v_n = t_n.cross(b_n);
+
+        const Vec3 q_x = b_n * (2 * g_x / (W - 1));
+        const Vec3 q_y = v_n * (2 * g_y / (H - 1));
+
+        const Vec3 p_1m = t_n * d - b_n * g_x - v_n * g_y;
+
+        for (int j = 0; j < H; j++) {
+            for (int i = 0; i < W; i++) {
                 pixel = black;
+                const Vec3 p_ij = p_1m + q_x * (i) + q_y * (j);
 
-                Ray ray(Vec3(x, y, 100), Vec3(0, 0, -1));
-                if (sphere.intersect(ray, t)) {
+                Ray ray(E, p_ij.normalize());
+
+                /* Ray ray(Vec3(x, y, 100), Vec3(0, 0, -1)); */
+                if (sphere.intersect(ray, ti)) {
                     pixel = red;
-                    const Vec3 pi = ray.o + ray.d*t;
+                    const Vec3 pi = ray.o + ray.d*ti;
                     const Vec3 L = light.c - pi;
                     const Vec3 N = sphere.getNormal(pi);
                     const double dt = L.normalize().dot(N.normalize());
@@ -129,16 +117,11 @@ int main(int argc, char *argv[]) {
                 }
 
                 SDL_SetRenderDrawColor(renderer, (uint8_t)pixel.x, (uint8_t)pixel.y, (uint8_t)pixel.z, 255);
-                SDL_RenderDrawPoint(renderer, x, y);
-                
-                /*
-                out << (int)pixel.x << " "
-                    << (int)pixel.y << " "
-                    << (int)pixel.z << "\n";
-                */
+                SDL_RenderDrawPoint(renderer, i, j);
             }
         }
 
+        SDL_RenderPresent(renderer);
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
