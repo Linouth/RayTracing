@@ -126,7 +126,8 @@ void Scene::run() {
                     case SDLK_ESCAPE:
                         quit = true;
                         break;
-                    case SDLK_w:
+
+                    case SDLK_w:  // Light movement
                         light.getCenter().y -= STEPSIZE;
                         break;
                     case SDLK_a:
@@ -151,6 +152,31 @@ void Scene::run() {
                                   << ", z: " << c.z << std::endl;
                         break;
                         }
+
+                    case SDLK_1:
+                        camera.setEye({0, 0, 0});
+                        camera.setTarget({0, 0, 1});
+                        break;
+                    case SDLK_2:
+                        camera.setEye({0.1, 0, 0});
+                        camera.setTarget({0, 0, 1});
+                        break;
+                    case SDLK_3:
+                        camera.setEye({0.2, 0, 0});
+                        camera.setTarget({0, 0, 1});
+                        break;
+                    case SDLK_4:
+                        camera.setEye({0.3, 0, 0});
+                        camera.setTarget({0, 0, 1});
+                        break;
+                    case SDLK_5:
+                        camera.setEye({0.4, 0, 0});
+                        camera.setTarget({0, 0, 1});
+                        break;
+                    case SDLK_6:
+                        camera.setEye({1, 0, 1});
+                        camera.setTarget({0.5, 0, 0});
+                        break;
                     default:
                         break;
                 }
