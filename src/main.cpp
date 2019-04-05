@@ -84,24 +84,31 @@ int main(void) {
     bool quit = false;
     while (!quit) {
 
+        // Calculate image size in pixels (size/2)
         const double g_x = d * std::tan(theta/2);
         const double g_y = g_x * H/W;
 
-        const Vec3 t = T - E;
+        // Define camera direction vectors
+        const Vec3 t = T - E;               // target vector
         const Vec3 t_n = t.normalize();
-        const Vec3 b_n = w.cross(t_n);
-        const Vec3 v_n = t_n.cross(b_n);
+        const Vec3 b_n = w.cross(t_n);      // horizontal vector
+        const Vec3 v_n = t_n.cross(b_n);    // vertical vector
 
+        // Calculate next pixel shifting vectors
         const Vec3 q_x = b_n * (2 * g_x / (W - 1));
         const Vec3 q_y = v_n * (2 * g_y / (H - 1));
 
+        // Calculate position of bottom left pixel
         const Vec3 p_1m = t_n * d - b_n * g_x - v_n * g_y;
 
         for (int j = 0; j < H; j++) {
             for (int i = 0; i < W; i++) {
                 pixel = black;
+
+                // Calculate vector from camera to pixel
                 const Vec3 p_ij = p_1m + q_x * (i) + q_y * (j);
 
+                // Define ray from pixel vector
                 Ray ray(E, p_ij.normalize());
 
                 /* Ray ray(Vec3(x, y, 100), Vec3(0, 0, -1)); */
