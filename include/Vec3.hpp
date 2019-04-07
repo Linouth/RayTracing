@@ -28,6 +28,9 @@ struct Vec3 {
         return Vec3(x / mg, y / mg, z / mg);
     }
 
+    double distance2(const Vec3 &to) const {
+        return (to - *this).magnitude2();
+    }
     double distance(const Vec3 &to) const {
         return (to - *this).magnitude();
     }

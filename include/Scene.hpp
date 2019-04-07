@@ -7,12 +7,12 @@
 #include <SDL2/SDL.h>
 #include <vector>
 
-/* #include "Object.hpp" */
-
 class Camera {
     public:
         Camera() = default;
         Camera(int &width, int &height);
+
+        Vec3 getPos() const;
 
         void setTarget(const Vec3 &v);
         void lookAt(const Vec3 &v);
@@ -49,6 +49,7 @@ class Scene {
 
     private:
         std::vector<Object*> objects;
+        std::vector<Object*> lights;
 
         SDL_Window *window;
         SDL_Renderer *renderer;

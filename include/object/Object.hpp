@@ -5,11 +5,12 @@
 #include "utils/Color.hpp"
 
 #include <cmath>
+#include <iostream>
 
 class Object {
    public:
     Object() = default;
-    Object(const Color col) : color(col) {}
+    Object(const Vec3 &center, const Color &col) : center(center), color(col) {}
     virtual ~Object() = default;
 
     virtual Vec3 getNormal(const Vec3 &pi) = 0;
@@ -17,14 +18,32 @@ class Object {
 
     Color &getColor() { return color; };
 
+    Vec3 &getCenter() {
+        return center;
+    }
+
+    void update(const Vec3 &cameraPos) {
+        distanceFromCamera = cameraPos.distance2(center);
+        std::cout << "Object " << color.b << " DFC: " << distanceFromCamera << std::endl;
+    }
+
+    bool operator<(const Object &o) {
+        return (distanceFromCamera < o.distanceFromCamera);
+    }
+
+   protected:
+    Vec3 center;
+
    private:
     Color color;
+   public:
+    double distanceFromCamera;
 };
 
 class Sphere : public Object {
    public:
     Sphere(const Vec3 &center, const double radius, const Color &col)
-        : Object(col), center(center), radius(radius) {}
+        : Object(center, col), radius(radius) {}
 
     Vec3 getNormal(const Vec3 &pi) override { return (pi - center) / radius; }
 
@@ -52,12 +71,7 @@ class Sphere : public Object {
         return true;
     }
 
-    Vec3 &getCenter() {
-        return center;
-    }
-
    private:
-    Vec3 center;
     double radius;
 };
 

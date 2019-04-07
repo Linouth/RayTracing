@@ -5,12 +5,17 @@
 
 #include <set>
 #include <iostream>
+#include <algorithm>
 
 Camera::Camera(int &width, int &height) {
     this->width = width;
     this->height = height;
 
     updateRayParameters();
+}
+
+Vec3 Camera::getPos() const {
+    return E;
 }
 
 void Camera::setTarget(const Vec3 &v) {
@@ -72,6 +77,10 @@ Scene::~Scene() {
     for (auto object: objects)
         delete object;
     objects.clear();
+
+    for (auto light: lights)
+        delete light;
+    lights.clear();
 }
 
 void Scene::initVideo() {
@@ -89,18 +98,27 @@ void Scene::run() {
     const Color red(255, 0, 0);
     const Color black(0, 0, 0);
 
-    Sphere light({0, 0, -50}, 1, white);
+    lights = {
+        new Sphere({0, 0, -50}, 1, white)
+    };
 
     objects = {
         new Sphere({0, 0, -100}, 30, red),
-        new Sphere({20, 5, -50}, 10, {0, 0, 255})
+        new Sphere({20, 5, -150}, 15, {0, 0, 255})
     };
+
+    // TODO: Temporary camera distance update
+    for (auto &o : objects)
+        o->update(camera.getPos());
 
     double t;
     Color pixel = black;
 
     bool quit = false;
     while (!quit) {
+        // Sort objects on distance from camera
+        /* std::sort(objects.begin(), objects.end()); */
+
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
                 pixel = black;
@@ -109,24 +127,46 @@ void Scene::run() {
                 Ray ray = camera.getRay(i, j);
                 for (auto &object : objects) {
                     if (object->intersect(ray, t)) {
-                        pixel = red;
+                        // Camera ray intersects with object
                         const Vec3 pi = ray.o + ray.d * t;
-                        const Vec3 L = light.getCenter() - pi;
                         const Vec3 N = object->getNormal(pi);
-                        const double dt = L.normalize().dot(N.normalize());
+                        double dt = 0;
+
+                        for (auto &light : lights) {
+                            // Define ray from pi to light
+                            Ray lightRay = {
+                                pi,
+                                (light->getCenter() - pi).normalize()
+                            };
+
+                            for (auto &o : objects) {
+                                if (o != object
+                                    && o->intersect(lightRay, t)
+                                    && t > 0) {
+                                    dt = 0;
+                                    break;
+                                }
+                                // Didn't hit object,
+                                // clear path to light
+                                dt = lightRay.d.dot(N.normalize());
+                            }
+                        }
 
                         pixel = object->getColor() + white * dt;
-                    }
 
-                    SDL_SetRenderDrawColor(renderer,
-                                           (uint8_t)pixel.r,
-                                           (uint8_t)pixel.g,
-                                           (uint8_t)pixel.b,
-                                           255);
-                    // Note: y=0 is at top, height-y starts at bottom
-                    // and goes to the top of the screen
-                    SDL_RenderDrawPoint(renderer, i, height-1-j);
+                        // break from loop so only first intersect is drawn
+                        break;
+                    }
                 }
+                // Draw pixel to the screen
+                SDL_SetRenderDrawColor(renderer,
+                                       (uint8_t)pixel.r,
+                                       (uint8_t)pixel.g,
+                                       (uint8_t)pixel.b,
+                                       255);
+                // Note: y=0 is at top, height-y starts at bottom
+                // and goes to the top of the screen
+                SDL_RenderDrawPoint(renderer, i, height-1-j);
             }
         }
 
@@ -139,6 +179,7 @@ void Scene::run() {
             if (event.type == SDL_QUIT)
                 quit = true;
 
+            Object *light = lights.back();
             if (event.type == SDL_KEYDOWN) {
                 switch (event.key.keysym.sym) {
                     case SDLK_ESCAPE:
@@ -146,26 +187,26 @@ void Scene::run() {
                         break;
 
                     case SDLK_w:  // Light movement
-                        light.getCenter().y -= STEPSIZE;
+                        light->getCenter().y -= STEPSIZE;
                         break;
                     case SDLK_a:
-                        light.getCenter().x -= STEPSIZE;
+                        light->getCenter().x -= STEPSIZE;
                         break;
                     case SDLK_s:
-                        light.getCenter().y += STEPSIZE;
+                        light->getCenter().y += STEPSIZE;
                         break;
                     case SDLK_d:
-                        light.getCenter().x += STEPSIZE;
+                        light->getCenter().x += STEPSIZE;
                         break;
                     case SDLK_q:
-                        light.getCenter().z += STEPSIZE;
+                        light->getCenter().z += STEPSIZE;
                         break;
                     case SDLK_e:
-                        light.getCenter().z -= STEPSIZE;
+                        light->getCenter().z -= STEPSIZE;
                         break;
                     case SDLK_p:
                         {
-                        const Vec3 &c = light.getCenter();
+                        const Vec3 &c = light->getCenter();
                         std::cout << "x: " << c.x << ", y: " << c.y
                                   << ", z: " << c.z << std::endl;
                         break;
@@ -173,11 +214,11 @@ void Scene::run() {
 
                     case SDLK_j:
                         camera.moveEye({-1, 0, 0});
-                        camera.lookAt(light.getCenter());
+                        camera.lookAt(light->getCenter());
                         break;
                     case SDLK_l:
                         camera.moveEye({1, 0, 0});
-                        camera.lookAt(light.getCenter());
+                        camera.lookAt(light->getCenter());
                         break;
 
                     case SDLK_1:
