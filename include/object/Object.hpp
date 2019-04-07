@@ -10,6 +10,7 @@ class Object {
    public:
     Object() = default;
     Object(const Color col) : color(col) {}
+    virtual ~Object() = default;
 
     virtual Vec3 getNormal(const Vec3 &pi) = 0;
     virtual bool intersect(const Ray &ray, double &t) = 0;

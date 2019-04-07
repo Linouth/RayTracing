@@ -2,6 +2,7 @@
 #define SCENE_HPP
 
 #include "Vec3.hpp"
+#include "object/Object.hpp"
 
 #include <SDL2/SDL.h>
 #include <vector>
@@ -10,7 +11,6 @@
 
 class Camera {
     public:
-        /* Camera(int &width, int &height) : width(width), height(height) {} */
         Camera() = default;
         Camera(int &width, int &height);
 
@@ -31,7 +31,7 @@ class Camera {
         double theta = (3.141593 / 2);  // FOV
         Vec3 w = {0, 1, 0};             // Camera roll
 
-        Vec3 E = {0, 0, 0};  // Eye
+        Vec3 E = {0, 0, 0};   // Eye
         Vec3 T = {0, 0, -1};  // Target
 
         // Parameters to calculate Ray
@@ -40,15 +40,15 @@ class Camera {
 
 class Scene {
     public:
-        /* Scene(int width, int height) : camera{width, height}, width(width), height(height) {} */
         Scene(int width, int height);
+        ~Scene();
 
         void initVideo();
 
         void run();
 
     private:
-        /* std::vector<Object> objects; */
+        std::vector<Object*> objects;
 
         SDL_Window *window;
         SDL_Renderer *renderer;

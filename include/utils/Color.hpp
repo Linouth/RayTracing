@@ -24,8 +24,10 @@ class Color {
         double r, g, b;
 };
 
+/*
 std::ostream &operator<<(std::ostream &os, Color const &c) {
     return os << "r: " << c.r << ", g: " << c.g << ", b: " << c.b;
 }
+*/
 
 #endif

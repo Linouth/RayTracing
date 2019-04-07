@@ -65,6 +65,15 @@ Scene::Scene(int width, int height) {
     camera = {width, height};
 }
 
+Scene::~Scene() {
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+
+    for (auto object: objects)
+        delete object;
+    objects.clear();
+}
+
 void Scene::initVideo() {
     SDL_Init(SDL_INIT_VIDEO);
     window = SDL_CreateWindow("RayTracing", SDL_WINDOWPOS_CENTERED,
@@ -82,7 +91,7 @@ void Scene::run() {
 
     Sphere light({0, 0, -50}, 1, white);
 
-    std::vector<Object*> objects = {
+    objects = {
         new Sphere({0, 0, -100}, 30, red),
         new Sphere({20, 5, -50}, 10, {0, 0, 255})
     };
@@ -201,4 +210,6 @@ void Scene::run() {
             }
         }
     }
+
+    std::cout << "Closing\n";
 }

@@ -2,3 +2,4 @@ out*
 ray
 obj
 compile_commands.json
+.gdb_history
