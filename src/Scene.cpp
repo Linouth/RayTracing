@@ -271,9 +271,7 @@ void Scene::run() {
             camera.setTarget({0, 0, -137.5});
         }
 
-        while (!SDL_TICKS_PASSED(SDL_GetTicks(), timeout)) {
-            // ... do work until timeout has elapsed
-        }
+        while (!SDL_TICKS_PASSED(SDL_GetTicks(), timeout)) {}
     }
 
     std::cout << "Closing\n";

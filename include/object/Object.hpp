@@ -1,7 +1,7 @@
 #ifndef OBJECT_HPP
 #define OBJECT_HPP
 
-#include "Vec3.hpp"
+#include "utils/Vec3.hpp"
 #include "utils/Color.hpp"
 
 #include <cmath>

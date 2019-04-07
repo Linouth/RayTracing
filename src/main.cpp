@@ -4,7 +4,6 @@
 #include <SDL2/SDL.h>
 
 #include "Scene.hpp"
-#include "Vec3.hpp"
 
 int main(void) {
     int W = 500;

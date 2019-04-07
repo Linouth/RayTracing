@@ -1,7 +1,7 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
-#include "Vec3.hpp"
+#include "utils/Vec3.hpp"
 #include "object/Object.hpp"
 
 #include <SDL2/SDL.h>
