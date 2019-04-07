@@ -24,11 +24,10 @@ class Object {
 
     void update(const Vec3 &cameraPos) {
         distanceFromCamera = cameraPos.distance2(center);
-        std::cout << "Object " << color.b << " DFC: " << distanceFromCamera << std::endl;
     }
 
-    bool operator<(const Object &o) {
-        return (distanceFromCamera < o.distanceFromCamera);
+    static bool compByDistance(const Object *a, const Object *b) {
+        return a->distanceFromCamera < b->distanceFromCamera;
     }
 
    protected:
@@ -36,7 +35,6 @@ class Object {
 
    private:
     Color color;
-   public:
     double distanceFromCamera;
 };
 

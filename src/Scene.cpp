@@ -107,17 +107,24 @@ void Scene::run() {
         new Sphere({20, 5, -150}, 15, {0, 0, 255})
     };
 
-    // TODO: Temporary camera distance update
-    for (auto &o : objects)
-        o->update(camera.getPos());
 
     double t;
     Color pixel = black;
 
+    bool animation = false;
+    double x, z;
+    double ts = 0;
+
     bool quit = false;
     while (!quit) {
+        // set timeout to limit frame rate
+        Uint32 timeout = SDL_GetTicks() + 20;
+
+        // TODO: Temporary camera distance update
+        for (auto &o : objects)
+            o->update(camera.getPos());
         // Sort objects on distance from camera
-        /* std::sort(objects.begin(), objects.end()); */
+        std::sort(objects.begin(), objects.end(), Object::compByDistance);
 
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
@@ -245,10 +252,27 @@ void Scene::run() {
                         camera.setEye({1, 0, 1});
                         camera.setTarget({0.5, 0, 0});
                         break;
+
+                    case SDLK_z:
+                        animation = !animation;
+                        break;
                     default:
                         break;
                 }
             }
+        }
+
+        if (animation) {
+            x = 137.5 * (std::sin(3.1416/4 * ts));
+            z = 137.5 * (-std::cos(3.1416/4 * ts) + 1);
+            ts += 0.1;
+
+            camera.setEye({x, 0, -z});
+            camera.setTarget({0, 0, -137.5});
+        }
+
+        while (!SDL_TICKS_PASSED(SDL_GetTicks(), timeout)) {
+            // ... do work until timeout has elapsed
         }
     }
 
