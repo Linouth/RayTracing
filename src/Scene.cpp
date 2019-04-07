@@ -263,12 +263,14 @@ void Scene::run() {
         }
 
         if (animation) {
-            x = 137.5 * (std::sin(3.1416/4 * ts));
-            z = 137.5 * (-std::cos(3.1416/4 * ts) + 1);
+            const double centerOfRotation = 137.5;
+
+            x = centerOfRotation * (std::sin(3.1416/4 * ts));
+            z = centerOfRotation * (-std::cos(3.1416/4 * ts) + 1);
             ts += 0.1;
 
             camera.setEye({x, 0, -z});
-            camera.setTarget({0, 0, -137.5});
+            camera.setTarget({0, 0, -centerOfRotation});
         }
 
         while (!SDL_TICKS_PASSED(SDL_GetTicks(), timeout)) {}
