@@ -27,6 +27,10 @@ struct Vec3 {
         double mg = magnitude();
         return Vec3(x / mg, y / mg, z / mg);
     }
+
+    double distance(const Vec3 &to) const {
+        return (to - *this).magnitude();
+    }
 };
 
 /* std::ostream &operator<<(std::ostream &os, Vec3 const &v) { */

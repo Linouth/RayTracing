@@ -3,6 +3,7 @@
 #include "utils/Color.hpp"
 #include "object/Object.hpp"
 
+#include <set>
 #include <iostream>
 
 Camera::Camera(int &width, int &height) {
@@ -17,9 +18,17 @@ void Camera::setTarget(const Vec3 &v) {
     updateRayParameters();
 }
 
+void Camera::lookAt(const Vec3 &v) {
+    setTarget((v - E));
+}
+
 void Camera::setEye(const Vec3 &v) {
     E = v;
     updateRayParameters();
+}
+
+void Camera::moveEye(const Vec3 &v) {
+    setEye(E + v);
 }
 
 Ray Camera::getRay(const int x, const int y) const {
@@ -38,8 +47,8 @@ void Camera::updateRayParameters() {
     // Define camera direction vectors
     const Vec3 t = T - E;  // target vector
     const Vec3 t_n = t.normalize();
-    const Vec3 b_n = w.cross(t_n);    // horizontal vector
-    const Vec3 v_n = t_n.cross(b_n);  // vertical vector
+    const Vec3 b_n = t_n.cross(w);    // horizontal vector
+    const Vec3 v_n = b_n.cross(t_n);  // vertical vector
 
     // Calculate next pixel shifting vectors
     q_x = b_n * (2 * g_x / (width - 1));
@@ -71,19 +80,17 @@ void Scene::run() {
     const Color red(255, 0, 0);
     const Color black(0, 0, 0);
 
-    Sphere light({0, 0, 50}, 1, white);
+    Sphere light({0, 0, -50}, 1, white);
 
     std::vector<Object*> objects = {
-        new Sphere({0, 0, 100}, 30, red),
-        new Sphere({20, 5, 50}, 10, {0, 0, 255})
+        new Sphere({0, 0, -100}, 30, red),
+        new Sphere({20, 5, -50}, 10, {0, 0, 255})
     };
 
     double t;
     Color pixel = black;
 
     bool quit = false;
-
-    std::cout << "Starting loop\n";
     while (!quit) {
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
@@ -107,7 +114,9 @@ void Scene::run() {
                                            (uint8_t)pixel.g,
                                            (uint8_t)pixel.b,
                                            255);
-                    SDL_RenderDrawPoint(renderer, i, j);
+                    // Note: y=0 is at top, height-y starts at bottom
+                    // and goes to the top of the screen
+                    SDL_RenderDrawPoint(renderer, i, height-1-j);
                 }
             }
         }
@@ -145,13 +154,22 @@ void Scene::run() {
                     case SDLK_e:
                         light.getCenter().z -= STEPSIZE;
                         break;
-                    case SDLK_l:
+                    case SDLK_p:
                         {
                         const Vec3 &c = light.getCenter();
                         std::cout << "x: " << c.x << ", y: " << c.y
                                   << ", z: " << c.z << std::endl;
                         break;
                         }
+
+                    case SDLK_j:
+                        camera.moveEye({-1, 0, 0});
+                        camera.lookAt(light.getCenter());
+                        break;
+                    case SDLK_l:
+                        camera.moveEye({1, 0, 0});
+                        camera.lookAt(light.getCenter());
+                        break;
 
                     case SDLK_1:
                         camera.setEye({0, 0, 0});
